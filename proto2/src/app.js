@@ -332,17 +332,23 @@ Manager.setup({
 					});
 
 					for (const box of boxes) {
-						let updated = false;
+						const mybox = this.boxes[box.index];
+						const px = mybox.x;
+						const py = mybox.y;
+
+						if (this.isDragging && this.draggedBox !== null) {
+							if (this.draggedBox.id === mybox.id) {
+								continue;
+							}
+						}
 						if (typeof box.x === 'number') {
-							this.boxes[box.index].x = box.x;
-							updated = true;
+							mybox.x = box.x;
 						}
 						if (typeof box.y === 'number') {
-							this.boxes[box.index].y = box.y;
-							updated = true;
+							mybox.y = box.y;
 						}
-						if (updated) {
-							this.boxes[box.index].depth = this.getBoxLowestDepth() - 1;
+						if (mybox.x !== px || mybox.y !== py) {
+							mybox.depth = this.getBoxLowestDepth() - 1;
 						}
 					}
 				});
