@@ -5,24 +5,28 @@ const Global = {
 			h: Stage.h / 720
 		};
 	},
+	FONT_SIZE: 58,
 	BOX_SCALE: 2,
 	BOX_WIDTH: 80,
-	FONT_SIZE: 58,
 	BOX_HEIGHT: 80,
 	NUMBER_OF_BOX: 30,
+	BOX_COLORS: [
+		C.aliceBlue, C.bisque, C.cornflowerBlue, C.cornsilk, C.darkOrchid, C.deepSkyBlue,
+		C.dodgerBlue, C.darkViolet, C.floralWhite, C.greenYellow, C.lawnGreen, C.lightSkyBlue,
+		C.mediumVioletRed, C.orangeRed, C.orchid, C.papayaWhip, C.peru, C.paleGreen, C.salmon,
+		C.seaGreen, C.slateBlue, C.royalBlue, C.sienna, C.tomato, C.sandyBrown, C.turquoise,
+		C.thistle, C.rosyBrown, C.pink, C.plum
+	],
 	GRID: {
 		COLS: 6,
 		ROWS: 5
+	},
+	onInit() {
+		const ratio = this.getRatio();
+		this.BOX_WIDTH *= ratio.w;
+		this.BOX_HEIGHT = this.BOX_WIDTH;
+		this.FONT_SIZE *= ratio.w;
 	}
-};
-
-const makeColorStop = (myGradient, color) => {
-	const c = C.HEXToRGBComponent(color);
-	myGradient.addColorStop(0, C.makeRGB(c.r + 50, c.g + 50, c.b + 50));
-	myGradient.addColorStop(0.1, color);
-	myGradient.addColorStop(0.6, color);
-	myGradient.addColorStop(0.9, C.makeRGB(c.r * 0.8, c.g * 0.8, c.b * 0.8));
-	myGradient.addColorStop(1, C.makeRGB(c.r * 0.76, c.g * 0.76, c.b * 0.76));
 };
 
 const drawPresent = (xCenter, yCenter, width, height, boxColor) => {
@@ -32,30 +36,21 @@ const drawPresent = (xCenter, yCenter, width, height, boxColor) => {
 	const x = xCenter - w / 2;
 	const y = yCenter - h / 2;
 	const wrapWidth = h / 10;
-	const drawWrap = (isStroke) => {
-		Draw.roundRect(x - 3, yCenter - wrapWidth / 2, w + 6, wrapWidth, 4, isStroke);
-		Draw.roundRect(xCenter - wrapWidth / 2, y - 3, wrapWidth, h + 8, 4, isStroke);
-	};
 	// box bottom border
 	Draw.setColor(C.black);
 	Draw.roundRect(x + 0.5, y + 3, w - 1, h);
-	// wrap outline
-	Draw.ctx.lineWidth = 4;
-	drawWrap(true);
-	Draw.ctx.lineWidth = 1;
 	// box
-	const myGradient = Draw.ctx.createLinearGradient(xCenter, y, xCenter, y + h);
-	makeColorStop(myGradient, boxColor);
-	Draw.setColor(myGradient);
+	Draw.setColor(boxColor);
 	Draw.roundRect(x, y, w, h);
+	// wrap
+	Draw.setColor(C.gold);
+	Draw.rect(x, yCenter - wrapWidth / 2, w, wrapWidth);
+	Draw.rect(xCenter - wrapWidth / 2, y, wrapWidth, h);
 	// box outline
 	Draw.ctx.lineWidth = 2;
 	Draw.setColor(C.black);
 	Draw.roundRect(x, y, w, h, 10, true);
 	Draw.ctx.lineWidth = 1;
-	// wrap
-	Draw.setColor(C.gold);
-	drawWrap();
 };
 
 Manager.setup({
@@ -69,7 +64,7 @@ Manager.setup({
 			};
 		},
 		initBoxes() {
-			const colors = Math.shuffle(C.list.slice());
+			const colors = Math.shuffle(Global.BOX_COLORS);
 			for (let i = 0; i < Global.NUMBER_OF_BOX; i++) {
 				const pos = this.getGridWorldPos(i);
 				this.boxes.push({
@@ -79,7 +74,7 @@ Manager.setup({
 				});
 				const canvas = Draw.createCanvas(Global.BOX_WIDTH * Global.BOX_SCALE * 1.2, Global.BOX_HEIGHT * Global.BOX_SCALE * 1.2, (w, h) => {
 					Draw.ctx.scale(Global.BOX_SCALE, Global.BOX_SCALE);
-					drawPresent(w / 2 / Global.BOX_SCALE, h / 2 / Global.BOX_SCALE, Global.BOX_WIDTH, Global.BOX_HEIGHT, colors.pop());
+					drawPresent(w / 2 / Global.BOX_SCALE, h / 2 / Global.BOX_SCALE, Global.BOX_WIDTH, Global.BOX_HEIGHT, colors[i % colors.length]);
 				});
 				this.presents.push(canvas);
 			}
@@ -87,7 +82,6 @@ Manager.setup({
 	},
 	onSetup() {
 		// global variables
-		Font.generate('boxText', Global.FONT_SIZE);
 		this.grid = {
 			paddingX: 20,
 			paddingY: 20
@@ -96,6 +90,8 @@ Manager.setup({
 		this.presents = [];
 	},
 	onInit() {
+		Global.onInit();
+		Font.generate('boxText', Global.FONT_SIZE);
 		const gridWidth = (Global.GRID.COLS - 1) * (Global.BOX_WIDTH + this.grid.paddingX);
 		const gridHeight = (Global.GRID.ROWS - 1) * (Global.BOX_HEIGHT + this.grid.paddingY);
 		this.grid.xOffset = Stage.mid.w - gridWidth / 2;
