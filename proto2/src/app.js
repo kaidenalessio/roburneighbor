@@ -309,6 +309,7 @@ Manager.setup({
 					for (const user of users) {
 						if (user.name !== null) {
 							this.nameInputs[user.index].value = user.name;
+							resizeInputByValue(this.nameInputs[user.index]);
 						}
 						if (user.timeTo > getTimeNow()) {
 							const timer = this.spawnTimerOnName(user.index);
