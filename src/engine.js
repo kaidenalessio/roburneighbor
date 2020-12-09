@@ -89,19 +89,41 @@ const Input = {
 	y: 0,
 	canvas: null, // canvas as target element to offset mouse position to
 	touchCount: 0,
+	mouseDownEvent: {},
 	init(canvas) {
 		this.keys.length = 0;
 		this.keys.push(this.create()); // for space
 		this.keys.push(this.create()); // for left click
 		this.keys.push(this.create()); // for touch/tap
-		window.addEventListener('keyup', (e) => { if (e.keyCode === 32) this.keys[this.SPACE].up(); });
-		window.addEventListener('keydown', (e) => { if (e.keyCode === 32) this.keys[this.SPACE].down(); });
-		window.addEventListener('mouseup', (e) => { this.updateMouse(e); if (e.button === 0) this.keys[this.CLICK].up(); });
-		window.addEventListener('mousemove', (e) => { this.updateMouse(e); });
-		canvas.addEventListener('mousedown', (e) => { this.updateMouse(e); if (e.button === 0) this.keys[this.CLICK].down(); });
+		window.addEventListener('keyup', (e) => {
+			if (e.keyCode === 32) {
+				this.keys[this.SPACE].up();
+			}
+		});
+		window.addEventListener('keydown', (e) => {
+			if (e.keyCode === 32) {
+				this.keys[this.SPACE].down();
+			}
+		});
+		window.addEventListener('mouseup', (e) => {
+			this.updateMouse(e);
+			// if (e.button === 0) {
+				this.keys[this.CLICK].up();
+			// }
+		});
+		window.addEventListener('mousemove', (e) => {
+			this.updateMouse(e);
+		});
+		window.addEventListener('mousedown', (e) => {
+			this.updateMouse(e);
+			// if (e.button === 0) {
+				this.keys[this.CLICK].down();
+			// }
+			this.mouseDownEvent = e;
+		});
 		window.addEventListener('touchend', (e) => { this.updateTouch(e); this.keys[this.TAP].up(); });
 		window.addEventListener('touchmove', (e) => { this.updateTouch(e); });
-		canvas.addEventListener('touchstart', (e) => { this.updateTouch(e); this.keys[this.TAP].down(); });
+		window.addEventListener('touchstart', (e) => { this.updateTouch(e); this.keys[this.TAP].down(); });
 		canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 		this.canvas = canvas;
 	},
@@ -519,6 +541,14 @@ const Draw = {
 		this.ctx.rotate(angle);
 		this.ctx.scale(xscale, yscale);
 		this.ctx.drawImage(name, originX, originY);
+		this.ctx.restore();
+	},
+	onTransform(x, y, xscale, yscale, angle, drawFn) {
+		this.ctx.save();
+		this.ctx.translate(x, y);
+		this.ctx.rotate(angle);
+		this.ctx.scale(xscale, yscale);
+		drawFn();
 		this.ctx.restore();
 	},
 	onCanvas(canvas, drawFn) {
