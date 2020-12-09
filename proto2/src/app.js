@@ -1,3 +1,5 @@
+var firebaseConfig;
+
 const Global = {
 	DATABASE_NAME: 'MyDefaultRoom',
 	getRatio() {
@@ -24,11 +26,15 @@ const Global = {
 		COLS: 6,
 		ROWS: 5
 	},
+	RATIO: {
+		w: 1,
+		h: 1
+	},
 	onInit() {
-		const ratio = this.getRatio();
-		this.BOX_WIDTH *= ratio.w;
+		this.RATIO = this.getRatio();
+		this.BOX_WIDTH *= this.RATIO.w;
 		this.BOX_HEIGHT = this.BOX_WIDTH;
-		this.FONT_SIZE *= ratio.w;
+		this.FONT_SIZE *= this.RATIO.w;
 
 		const urlParams = new URLSearchParams(window.location.search);
 		const box = Number(urlParams.get('box'));
@@ -111,11 +117,7 @@ const createNameInput = (translateX, translateY, textAlign, value, edges={}, onC
 	input.style.textAlign = textAlign;
 	input.onkeydown = input.onkeyup = () => resizeInputByValue(input);
 	if (onClickCallback) {
-		input.onmousedown = (e) => {
-			if (e.button === 0) {
-				onClickCallback();
-			}
-		};
+		input.onmousedown = onClickCallback;
 	}
 	if (onChangeCallback) {
 		input.onchange = onChangeCallback;
@@ -146,7 +148,7 @@ class GameTimer {
 		const text = `:${Math.max(0, Math.round(this.time / 1000))}`;
 		const fill = Draw.ctx.fillStyle;
 		Draw.setColor(C.black);
-		Draw.text(this.x + 1, this.y + 3, text);
+		Draw.text(this.x + 1 * Global.RATIO.w, this.y + 3 * Global.RATIO.w, text);
 		Draw.setColor(C.crimson);
 		Draw.text(this.x, this.y, text);
 	}
@@ -238,24 +240,30 @@ Manager.setup({
 				this.presents.push(canvas);
 			}
 		},
-		nameInputOnClick(index) {
-			const timer = this.spawnTimerOnName(index);
-			this.sendDataUsers(index, 'timeTo', timer.timeTo);
+		nameInputOnClick(e, index) {
+			if (e.button === 0) {
+				const timer = this.spawnTimerOnName(index);
+				this.sendDataUsers(index, 'timeTo', timer.timeTo);
+			}
+			else if (e.button === 2) {
+				this.removeTimer(index);
+				this.sendDataUsers(index, 'timeTo', 0);
+			}
 		},
 		nameInputOnChange(index) {
 			this.sendDataUsers(index, 'name', this.nameInputs[index].value);
 		},
 		initNameInputs() {
-			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 1',  { top: '15px',    left: '20%' },   () => this.nameInputOnClick(0), () => this.nameInputOnChange(0)));
-			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 2',  { top: '15px',    left: '50%' },   () => this.nameInputOnClick(1), () => this.nameInputOnChange(1)));
-			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 3',  { top: '15px',    left: '80%' },   () => this.nameInputOnClick(2), () => this.nameInputOnChange(2)));
-			this.nameInputs.push(createNameInput(0, -50, Align.r, 'Name 4',  { top: '30%',     right: '20px' }, () => this.nameInputOnClick(3), () => this.nameInputOnChange(3)));
-			this.nameInputs.push(createNameInput(0, -50, Align.r, 'Name 5',  { top: '70%',     right: '20px' }, () => this.nameInputOnClick(4), () => this.nameInputOnChange(4)));
-			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 6',  { bottom: '15px', left: '80%' },   () => this.nameInputOnClick(5), () => this.nameInputOnChange(5)));
-			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 7',  { bottom: '15px', left: '50%' },   () => this.nameInputOnClick(6), () => this.nameInputOnChange(6)));
-			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 8',  { bottom: '15px', left: '20%' },   () => this.nameInputOnClick(7), () => this.nameInputOnChange(7)));
-			this.nameInputs.push(createNameInput(0, -50, Align.l, 'Name 9',  { top: '70%',     left: '20px' },  () => this.nameInputOnClick(8), () => this.nameInputOnChange(8)));
-			this.nameInputs.push(createNameInput(0, -50, Align.l, 'Name 10', { top: '30%',     left: '20px' },  () => this.nameInputOnClick(9), () => this.nameInputOnChange(9)));
+			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 1',  { top: '15px',    left: '20%' },   (e) => this.nameInputOnClick(e, 0), () => this.nameInputOnChange(0)));
+			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 2',  { top: '15px',    left: '50%' },   (e) => this.nameInputOnClick(e, 1), () => this.nameInputOnChange(1)));
+			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 3',  { top: '15px',    left: '80%' },   (e) => this.nameInputOnClick(e, 2), () => this.nameInputOnChange(2)));
+			this.nameInputs.push(createNameInput(0, -50, Align.r, 'Name 4',  { top: '30%',     right: '20px' }, (e) => this.nameInputOnClick(e, 3), () => this.nameInputOnChange(3)));
+			this.nameInputs.push(createNameInput(0, -50, Align.r, 'Name 5',  { top: '70%',     right: '20px' }, (e) => this.nameInputOnClick(e, 4), () => this.nameInputOnChange(4)));
+			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 6',  { bottom: '15px', left: '80%' },   (e) => this.nameInputOnClick(e, 5), () => this.nameInputOnChange(5)));
+			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 7',  { bottom: '15px', left: '50%' },   (e) => this.nameInputOnClick(e, 6), () => this.nameInputOnChange(6)));
+			this.nameInputs.push(createNameInput(-50, 0, Align.c, 'Name 8',  { bottom: '15px', left: '20%' },   (e) => this.nameInputOnClick(e, 7), () => this.nameInputOnChange(7)));
+			this.nameInputs.push(createNameInput(0, -50, Align.l, 'Name 9',  { top: '70%',     left: '20px' },  (e) => this.nameInputOnClick(e, 8), () => this.nameInputOnChange(8)));
+			this.nameInputs.push(createNameInput(0, -50, Align.l, 'Name 10', { top: '30%',     left: '20px' },  (e) => this.nameInputOnClick(e, 9), () => this.nameInputOnChange(9)));
 			for (const input of this.nameInputs) {
 				resizeInputByValue(input);
 			}
@@ -265,12 +273,15 @@ Manager.setup({
 			this.timers.push(timer);
 			return timer;
 		},
-		spawnTimerOnName(index) {
+		removeTimer(nameIndex) {
 			for (let i = this.timers.length - 1; i >= 0; --i) {
-				if (this.timers[i].nameIndex === index) {
+				if (this.timers[i].nameIndex === nameIndex) {
 					this.timers.splice(i, 1);
 				}
 			}
+		},
+		spawnTimerOnName(index) {
+			this.removeTimer(index);
 			const b = this.nameInputs[index].getBoundingClientRect();
 			const cb = Stage.canvas.getBoundingClientRect();
 			const x = (b.x - cb.x) + b.width / 2;
@@ -315,6 +326,9 @@ Manager.setup({
 							const timer = this.spawnTimerOnName(user.index);
 							timer.timeTo = user.timeTo;
 						}
+						else {
+							this.removeTimer(user.index);
+						}
 					}
 				});
 
@@ -342,10 +356,10 @@ Manager.setup({
 							}
 						}
 						if (typeof box.x === 'number') {
-							mybox.x = box.x;
+							mybox.x = box.x * Global.RATIO.w;
 						}
 						if (typeof box.y === 'number') {
-							mybox.y = box.y;
+							mybox.y = box.y * Global.RATIO.h;
 						}
 						if (mybox.x !== px || mybox.y !== py) {
 							mybox.depth = this.getBoxLowestDepth() - 1;
@@ -363,10 +377,11 @@ Manager.setup({
 		sendDataBox(index) {
 			if (this.dbBoxes) {
 				const box = this.boxes[index];
-				this.dbBoxes.child(`${index}`).set({
-					x: box.x,
-					y: box.y
-				});
+				const value = {
+					x: box.x / Global.RATIO.w,
+					y: box.y / Global.RATIO.h
+				};
+				this.dbBoxes.child(`${index}`).set(value);
 			}
 		},
 		getBoxLowestDepth() {
