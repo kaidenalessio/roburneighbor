@@ -80,6 +80,8 @@ const Input = {
 	SPACE: 0,
 	CLICK: 1,
 	TAP: 2,
+	ESCAPE: 3,
+	keyCount: 4, // space, click, tap, escape
 	keys: [],
 	position: {
 		x: 0,
@@ -92,17 +94,23 @@ const Input = {
 	mouseDownEvent: {},
 	init(canvas) {
 		this.keys.length = 0;
-		this.keys.push(this.create()); // for space
-		this.keys.push(this.create()); // for left click
-		this.keys.push(this.create()); // for touch/tap
+		for (let i = 0; i < this.keyCount; i++) {
+			this.keys.push(this.create());
+		}
 		window.addEventListener('keyup', (e) => {
 			if (e.keyCode === 32) {
 				this.keys[this.SPACE].up();
+			}
+			else if (e.keyCode === 27) {
+				this.keys[this.ESCAPE].up();
 			}
 		});
 		window.addEventListener('keydown', (e) => {
 			if (e.keyCode === 32) {
 				this.keys[this.SPACE].down();
+			}
+			else if (e.keyCode === 27) {
+				this.keys[this.ESCAPE].down();
 			}
 		});
 		window.addEventListener('mouseup', (e) => {
@@ -163,6 +171,15 @@ const Input = {
 			if (key.pressed) return true;
 		}
 		return false;
+	},
+	keyUp(index) {
+		return this.keys[index].released;
+	},
+	keyDown(index) {
+		return this.keys[index].pressed;
+	},
+	keyHold(index) {
+		return this.keys[index].held;
 	},
 	create() {
 		return {
